@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maureen's Song Party</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home-page">
+    <!-- Background decorations -->
+    <div class="background-container">
+        <div class="floating-leaves">
+            <div class="leaf"></div>
+            <div class="leaf"></div>
+            <div class="leaf"></div>
+            <div class="leaf"></div>
+            <div class="leaf"></div>
+        </div>
+        <div class="sparkles">
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+        </div>
+    </div>
+
+    <div class="home-container">
+        <!-- Title Section -->
+        <div class="title-section">
+            <h1 class="main-title">Maureen's<br><span class="subtitle-word">Song Party</span></h1>
+            <p class="tagline">A cozy music party game with two fun ways to play!</p>
+        </div>
+
+        <!-- Game Mode Cards -->
+        <div class="game-modes-grid">
+            <div class="game-mode-card">
+                <div class="card-icon">🎵</div>
+                <h2>Fill in the Blank</h2>
+                <p>Test your lyrics and complete the song!</p>
+            </div>
+            <div class="game-mode-card">
+                <div class="card-icon">❓</div>
+                <h2>Guess the Song</h2>
+                <p>Listen close and guess the song title!</p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-primary btn-start-hosting" onclick="window.location.href='host.html'">
+                🎵 Start Hosting
+            </button>
+            <div class="button-row">
+                <button class="btn btn-secondary" onclick="window.location.href='play.html'">
+                    📱 Join with QR
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='composer.html'">
+                    ⚡ Quick Create
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Animation -->
+        <div class="loading-section">
+            <div class="walking-cat">
+                <div class="cat-body"></div>
+                <div class="cat-head">🐱</div>
+                <div class="cat-tail"></div>
+            </div>
+            <p class="loading-text">Let's have fun!</p>
+        </div>
+
+        <!-- Decorative Elements -->
+        <div class="decorative-sticker">
+            <div class="sticker-content">🌻</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
