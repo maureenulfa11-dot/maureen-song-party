@@ -78,9 +78,8 @@
                     <h3>🎵 Song Source</h3>
                     <div class="form-group">
                         <label>Paste YouTube link or type a song name</label>
-                        <input type="text" id="songSource" placeholder="e.g., Sunflower Fields by Tommy Emmanuel">
+                        <input type="text" id="songSource" placeholder="e.g., Sunflower Fields">
                     </div>
-
                     <div class="form-group">
                         <label>Game Mode</label>
                         <select id="gameModeSelect">
@@ -88,27 +87,18 @@
                             <option value="guess-song">Guess the Song</option>
                         </select>
                     </div>
-
-                    <div class="form-group">
-                        <label>Start at (seconds)</label>
-                        <input type="number" id="startSeconds" value="0" min="0">
-                    </div>
-
-                    <button class="btn btn-primary" onclick="addSongToPlaylist()">
+                    <button class="btn btn-primary" onclick="addSongToPlaylist()" style="width: 100%;">
                         ➕ Add Song
                     </button>
                 </div>
-
                 <div class="card" style="margin-top: 20px;">
                     <h3>📋 Your Playlist</h3>
                     <div id="playlistItems" style="max-height: 300px; overflow-y: auto;">
                         <p style="color: #999;">No songs added yet</p>
                     </div>
-                    <div style="margin-top: 20px;">
-                        <button class="btn btn-success" onclick="startGameWithPlaylist()" style="width: 100%;">
-                            ▶️ Start Game
-                        </button>
-                    </div>
+                    <button class="btn btn-success" onclick="startGame()" style="width: 100%; margin-top: 20px;">
+                        ▶️ Start Game
+                    </button>
                 </div>
             </div>
 
@@ -122,17 +112,12 @@
                             <option value="ballad">Ballad</option>
                             <option value="rock">Rock</option>
                             <option value="indie">Indie</option>
-                            <option value="trending">Trending</option>
-                            <option value="mixed">Mixed</option>
                         </select>
                     </div>
-
                     <h3 style="margin-top: 20px;">📅 Era</h3>
                     <div class="form-group">
                         <select id="eraSelect">
                             <option value="all">1960 to Now</option>
-                            <option value="1960s">1960s</option>
-                            <option value="1970s">1970s</option>
                             <option value="1980s">1980s</option>
                             <option value="1990s">1990s</option>
                             <option value="2000s">2000s</option>
@@ -140,24 +125,12 @@
                             <option value="2020s">2020s</option>
                         </select>
                     </div>
-
                     <h3 style="margin-top: 20px;">🎮 Number of Rounds</h3>
                     <div class="form-group">
                         <input type="number" id="roundsInput" value="5" min="1" max="20">
                     </div>
-
                     <button class="btn btn-primary" onclick="generateAutoPlaylist()" style="width: 100%; margin-top: 20px;">
-                        🎲 Generate Auto Playlist
-                    </button>
-                </div>
-
-                <div class="card" style="margin-top: 20px;">
-                    <h3>📊 Preview</h3>
-                    <div id="previewContent" style="text-align: center; color: #999; padding: 40px 20px;">
-                        Generate a playlist to see preview
-                    </div>
-                    <button class="btn btn-success" onclick="startAutoGame()" style="width: 100%; margin-top: 20px; display: none;" id="startAutoGameBtn">
-                        ▶️ Start Game
+                        🎲 Generate Playlist
                     </button>
                 </div>
             </div>
@@ -171,108 +144,30 @@
                 <h2>🎮 Host Lobby</h2>
                 <button class="btn btn-secondary" onclick="goToPage('homePage')">← Home</button>
             </div>
-
-            <!-- LOBBY STATE -->
             <div id="lobbyState">
                 <div class="grid-2">
-                    <!-- Room Code Card -->
                     <div class="room-code-card">
                         <div class="room-code-label">Room Code</div>
-                        <div class="room-code-display" id="displayRoomCode">----</div>
-                        <div class="room-code-help">Share this code with your friends!</div>
-                        <button class="btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="copyRoomCode()">
-                            📋 Copy Code
-                        </button>
+                        <div class="room-code-display" id="displayRoomCode">1234</div>
+                        <div class="room-code-help">Share with your friends!</div>
                     </div>
-
-                    <!-- QR Card -->
                     <div class="qr-card">
                         <div class="qr-card-label">Scan to Join</div>
                         <div class="qr-container" id="qrContainer">
-                            <svg width="200" height="200" viewBox="0 0 200 200" style="border: 2px solid #ccc;">
-                                <rect width="200" height="200" fill="white"/>
-                                <text x="100" y="100" text-anchor="middle" dy=".3em" font-family="Arial" font-size="12" fill="#999">QR Code</text>
-                            </svg>
+                            <div style="text-align: center; color: #999; padding: 40px;">QR Code</div>
                         </div>
-                        <div class="qr-text">📱 Players can scan with their phone camera</div>
                     </div>
                 </div>
-
-                <!-- Players List -->
                 <div class="card" style="margin-top: 20px;">
-                    <h3>👥 Players (<span id="playerCount">0</span>)</h3>
-                    <ul class="player-list" id="hostPlayersList">
-                        <li class="player-item">
-                            <span class="player-name">Waiting for players...</span>
-                            <span class="player-status">—</span>
-                        </li>
+                    <h3>👥 Players (0)</h3>
+                    <ul class="player-list">
+                        <li class="player-item"><span>No players yet</span></li>
                     </ul>
                 </div>
-
-                <!-- Start Game Controls -->
                 <div class="card" style="margin-top: 20px;">
-                    <h3>⚙️ Setup</h3>
-                    <div class="form-group">
-                        <label>Select Game Source</label>
-                        <select id="gameSourceSelect" onchange="updateGameSource()">
-                            <option value="quick-create">Quick Create Playlist</option>
-                            <option value="auto-library">Auto Library</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-success" onclick="hostStartGame()" style="width: 100%;">
+                    <button class="btn btn-success" style="width: 100%;">
                         ▶️ Start Game
                     </button>
-                </div>
-            </div>
-
-            <!-- GAME STATE -->
-            <div id="gameState" style="display: none;">
-                <div class="page-header">
-                    <h2>Round <span id="currentRound">1</span>/<span id="totalRounds">5</span></h2>
-                    <div class="header-badge" id="answerStatus">Waiting for answers...</div>
-                </div>
-
-                <div class="grid-2">
-                    <!-- Main Game Area -->
-                    <div class="card">
-                        <h3 id="currentQuestion">Which song is this?</h3>
-                        <div style="text-align: center; margin: 30px 0;">
-                            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">🎵 Music Player (Host Only)</div>
-                            <div style="background: #f5f0e8; padding: 20px; border-radius: 10px; border: 2px dashed var(--wood);">
-                                <p style="color: #999;">Audio preview plays here</p>
-                                <p style="font-size: 12px; color: #999; margin-top: 10px;">Only the host hears the music</p>
-                            </div>
-                        </div>
-
-                        <div id="answerDisplay" style="display: none; text-align: center; background: #c8e6c9; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #4caf50;">
-                            <div style="font-size: 14px; color: #2e7d32; font-weight: 600;">✓ Correct Answer</div>
-                            <div style="font-size: 20px; color: #2e7d32; font-weight: bold; margin-top: 10px;" id="revealedAnswer">—</div>
-                        </div>
-
-                        <div style="margin-top: 20px; display: flex; gap: 10px;">
-                            <button class="btn btn-primary" onclick="hostRevealAnswer()" id="revealBtn" style="flex: 1;">
-                                👁️ Reveal Answer
-                            </button>
-                            <button class="btn btn-secondary" onclick="hostNextRound()" id="nextBtn" style="flex: 1; display: none;">
-                                ⏭️ Next Round
-                            </button>
-                            <button class="btn btn-secondary" onclick="hostEndGame()" style="flex: 1;">
-                                ⛔ End Game
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Leaderboard -->
-                    <div class="card">
-                        <h3>🏆 Leaderboard</h3>
-                        <ul class="leaderboard" id="hostLeaderboard">
-                            <li class="leaderboard-item">
-                                <span class="leaderboard-rank">#1</span>
-                                <span class="leaderboard-name">No players yet</span>
-                                <span class="leaderboard-score">0</span>
-                            </li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>
@@ -281,100 +176,22 @@
     <!-- PLAY PAGE -->
     <div id="playPage" class="page">
         <div class="container">
-            <!-- LOGIN STATE -->
             <div id="loginState" style="margin-top: 60px;">
                 <div class="card" style="max-width: 400px; margin: 0 auto;">
                     <h2 style="text-align: center;">🎮 Join Game</h2>
-                    <p style="text-align: center; color: #666; margin-bottom: 30px;">Enter the code from the big screen</p>
-
                     <div class="form-group">
-                        <label>Room Code (4 digits)</label>
-                        <input type="text" id="playerRoomCodeInput" placeholder="0000" maxlength="4" inputmode="numeric">
+                        <label>Room Code</label>
+                        <input type="text" placeholder="Enter code" maxlength="4">
                     </div>
-
                     <div class="form-group">
                         <label>Your Name</label>
-                        <input type="text" id="playerNameInput" placeholder="Enter your name" maxlength="20">
+                        <input type="text" placeholder="Enter your name">
                     </div>
-
-                    <div id="joinError" style="color: #d32f2f; font-size: 14px; margin-bottom: 15px; display: none;"></div>
-
-                    <button class="btn btn-primary" onclick="playerJoinGame()" style="width: 100%; font-size: 16px;">
+                    <button class="btn btn-primary" style="width: 100%;">
                         ✓ Join Game
                     </button>
                 </div>
             </div>
-
-            <!-- GAME STATE -->
-            <div id="playerGameState" style="display: none;">
-                <div class="page-header">
-                    <div>
-                        <div style="font-size: 12px; color: #666;">Your Score</div>
-                        <div class="score-display" style="display: inline-block; margin-top: 5px;">
-                            <span id="playerScore">0</span> pts
-                        </div>
-                    </div>
-                    <div class="header-badge" id="playerRoundBadge">Round 1/5</div>
-                </div>
-
-                <!-- Question Area -->
-                <div class="card" id="questionArea" style="display: none;">
-                    <div style="text-align: center; color: #666; margin-bottom: 15px;">Listen from the shared host screen</div>
-                    <h3 id="playerQuestion" style="text-align: center;">Which song is this?</h3>
-                </div>
-
-                <!-- Answer Buttons -->
-                <div class="answer-options" id="playerAnswerOptions" style="display: none;">
-                    <button class="answer-btn" onclick="playerSubmitAnswer(0)">
-                        <span class="answer-btn-label">A</span>
-                        <span class="answer-btn-text" id="playerOptionA">Option A</span>
-                    </button>
-                    <button class="answer-btn" onclick="playerSubmitAnswer(1)">
-                        <span class="answer-btn-label">B</span>
-                        <span class="answer-btn-text" id="playerOptionB">Option B</span>
-                    </button>
-                    <button class="answer-btn" onclick="playerSubmitAnswer(2)">
-                        <span class="answer-btn-label">C</span>
-                        <span class="answer-btn-text" id="playerOptionC">Option C</span>
-                    </button>
-                    <button class="answer-btn" onclick="playerSubmitAnswer(3)">
-                        <span class="answer-btn-label">D</span>
-                        <span class="answer-btn-text" id="playerOptionD">Option D</span>
-                    </button>
-                </div>
-
-                <!-- Result Display -->
-                <div class="card" id="playerResultArea" style="display: none; text-align: center;">
-                    <h3 id="playerResultMessage">Correct! 🎉</h3>
-                    <div class="score-display" style="font-size: 24px; margin: 20px 0;">
-                        <span id="playerRoundPoints">+100</span> pts
-                    </div>
-                    <p style="color: #666;">Waiting for next round...</p>
-                </div>
-
-                <!-- Mini Leaderboard -->
-                <div class="card" style="margin-top: 20px;">
-                    <h3>🏆 Live Scores</h3>
-                    <ul class="leaderboard" id="playerLeaderboard">
-                        <li class="leaderboard-item">
-                            <span class="leaderboard-rank">#1</span>
-                            <span class="leaderboard-name">Waiting for game...</span>
-                            <span class="leaderboard-score">0</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FINISH MODAL -->
-    <div id="finishModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-title">🎉 Game Over!</div>
-            <div id="finishLeaderboard" style="text-align: left; margin: 20px 0;"></div>
-            <button class="btn btn-primary" onclick="goToPage('homePage'); location.reload();" style="width: 100%; margin-top: 20px;">
-                🔄 Play Again
-            </button>
         </div>
     </div>
 
