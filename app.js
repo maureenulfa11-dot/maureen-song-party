@@ -1,147 +1,315 @@
-// app.js — Artboard hotspot wiring and overlays (updated QR generation to use relative URL for GitHub Pages)
-(function(){
-  function qs(id){return document.getElementById(id)}
-  function makeCode(){return Math.random().toString(36).substr(2,6).toUpperCase()}
-  function setQR(imgEl, url){ if(!imgEl) return; imgEl.src = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl='+encodeURIComponent(url) }
-
-  // Home artboard
-  var hotStart = qs('hot-start-hosting')
-  var hotJoinQR = qs('hot-join-qr')
-  var hotFill = qs('hot-fill-card')
-  var hotGuess = qs('hot-guess-card')
-
-  if(hotStart){
-    hotStart.addEventListener('click', function(){
-      var code = makeCode()
-      localStorage.setItem('lastRoom', code)
-      localStorage.setItem('room:'+code, JSON.stringify({players:[],songs:[]}))
-      location.href = 'host.html?room='+code
-    })
+// app.js — client-side Supabase-powered game logic for host and players
+(async function(){
+  const env = window.SUPABASE_ENV || {};
+  if(!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY){
+    console.warn('SUPABASE_ENV not configured. Copy env.example.js -> env.js and set your keys. The app will still render UI but realtime will not work.');
   }
 
-  if(hotJoinQR){
-    hotJoinQR.addEventListener('click', function(){
-      // no visible input on artboard — use a prompt to enter the room code
-      var code = prompt('Enter room code to join')
-      if(!code) return
-      code = code.trim().toUpperCase()
-      if(code) location.href = 'play.html?room='+code
-    })
-  }
+  const supabase = (window.supabase && env.SUPABASE_URL && env.SUPABASE_ANON_KEY)
+    ? supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
+    : null;
 
-  if(hotFill){ hotFill.addEventListener('click', function(){ location.href = 'composer.html?mode=fill' }) }
-  if(hotGuess){ hotGuess.addEventListener('click', function(){ location.href = 'composer.html?mode=guess' }) }
+  function makeCode(){ return Math.random().toString(36).substr(2,6).toUpperCase() }
+  function uid(){ return (crypto && crypto.randomUUID)?crypto.randomUUID():('id_'+Date.now()+'_'+Math.floor(Math.random()*10000)) }
+  function setQR(el, url){ if(!el) return; el.innerHTML = '<img src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl='+encodeURIComponent(url)+'" alt="QR" />' }
 
-  // Composer artboard wiring
-  var hotTabFill = qs('hot-tab-fill')
-  var hotTabGuess = qs('hot-tab-guess')
-  var inputSource = qs('input-song-source')
-  var selGenre = qs('select-genre')
-  var selBlanks = qs('select-blanks')
-  var hotAutoCreate = qs('hot-auto-create')
-  var hotSaveRound = qs('hot-save-round')
+  // --- Index page wiring ---
+  const btnHost = document.getElementById('btn-host');
+  const btnJoin = document.getElementById('btn-join');
+  const selMode = document.getElementById('select-mode');
+  const liveQR = document.getElementById('live-qr');
 
-  if(hotTabFill) hotTabFill.addEventListener('click', function(){ location.search = '?mode=fill' })
-  if(hotTabGuess) hotTabGuess.addEventListener('click', function(){ location.search = '?mode=guess' })
-
-  if(hotAutoCreate){
-    hotAutoCreate.addEventListener('click', function(){
-      // create a quick round and store locally
-      var song = musicLibrary.quickCreate()
-      song.mode = (new URLSearchParams(location.search).get('mode'))||'fill'
-      song.genre = selGenre ? selGenre.value : 'pop'
-      song.source = inputSource ? inputSource.value : ''
-      var rounds = JSON.parse(localStorage.getItem('rounds')||'[]')
-      rounds.push(song)
-      localStorage.setItem('rounds', JSON.stringify(rounds))
-      alert('Round created')
-    })
-  }
-
-  if(hotSaveRound){
-    hotSaveRound.addEventListener('click', function(){
-      var song = {
-        id: 'r'+Date.now(),
-        title: inputSource && inputSource.value ? inputSource.value : 'New Round',
-        artist: 'Composer',
-        mode: new URLSearchParams(location.search).get('mode')||'fill',
-        genre: selGenre?selGenre.value:'pop'
+  if(btnHost){
+    btnHost.addEventListener('click', async ()=>{
+      const code = makeCode();
+      const mode = selMode ? selMode.value : 'guess';
+      if(supabase){
+        // create room row
+        await supabase.from('rooms').insert([{id:code, owner:'host', mode}]);
       }
-      var rounds = JSON.parse(localStorage.getItem('rounds')||'[]')
-      rounds.push(song)
-      localStorage.setItem('rounds', JSON.stringify(rounds))
-      alert('Saved')
+      // navigate to host page
+      const url = new URL(window.location.href);
+      url.pathname = 'host.html';
+      url.search = '?room='+encodeURIComponent(code);
+      window.location = url.href;
     })
   }
 
-  // Host lobby wiring
-  var hostImg = qs('host-img')
-  var roomCodeText = qs('room-code-text')
-  var hostQR = qs('host-qr')
-  var playersArea = qs('players-area')
-  var hotStartGame = qs('hot-start-game')
-  var hostYTContainer = qs('host-yt-container')
-  var hostYT = qs('host-yt')
+  if(btnJoin){
+    btnJoin.addEventListener('click', ()=>{
+      const code = prompt('Enter room code to join');
+      if(!code) return;
+      const url = new URL(window.location.href);
+      url.pathname = 'play.html';
+      url.search = '?room='+encodeURIComponent(code.trim().toUpperCase());
+      window.location = url.href;
+    })
+  }
 
-  if(hostImg){
-    // if there is a room param show it
-    var params = new URLSearchParams(location.search)
-    var room = params.get('room')
-    if(room){
-      if(roomCodeText) roomCodeText.textContent = room
-      if(hostQR){
-        // Use a relative URL for the QR so GitHub Pages hosting path works correctly
-        var playUrl = new URL('play.html?room=' + encodeURIComponent(room), window.location.href).href
-        setQR(hostQR, playUrl)
-      }
-      // render players if any
-      var state = JSON.parse(localStorage.getItem('room:'+room) || '{}')
-      if(state.players && state.players.length){
-        playersArea.innerHTML = state.players.map(function(p){ return '<div style="padding:6px 0">'+(p.name||'Player')+'</div>'}).join('')
-      } else {
-        playersArea.innerHTML = '<div style="opacity:0.8">No players yet</div>'
-      }
+  // show a live QR for the index page (join link)
+  if(liveQR){
+    const url = new URL(window.location.href);
+    url.pathname = 'play.html';
+    url.search = '?room=' + (new URLSearchParams(location.search).get('room') || '');
+    setQR(liveQR, url.href);
+  }
+
+  // --- Host page ---
+  const roomParam = new URLSearchParams(location.search).get('room');
+  if(document.body.matches('.host-container')){
+    const room = roomParam;
+    const roomCodeEl = document.getElementById('room-code');
+    const playersList = document.getElementById('players-list');
+    const btnStart = document.getElementById('btn-start-game');
+    const btnNext = document.getElementById('btn-next-round');
+    const qrarea = document.getElementById('qr-area');
+    const hostMusic = document.getElementById('host-music');
+    const roundPanel = document.getElementById('round-panel');
+    const leaderboardEl = document.getElementById('leaderboard');
+
+    if(roomCodeEl) roomCodeEl.textContent = room || '----';
+    if(qrarea) setQR(qrarea, new URL('play.html?room='+encodeURIComponent(room), window.location.href).href);
+
+    let myHostId = uid();
+
+    async function refreshPlayers(){
+      if(!supabase) return;
+      const {data} = await supabase.from('players').select('*').eq('room_id', room).order('joined_at', {ascending:true});
+      renderPlayers(data || []);
     }
 
-    if(hotStartGame){
-      hotStartGame.addEventListener('click', function(){
-        // mark started and go to game artboard (swap image and show host player)
-        if(room) {
-          var state = JSON.parse(localStorage.getItem('room:'+room) || '{}')
-          state.started = true
-          localStorage.setItem('room:'+room, JSON.stringify(state))
-        }
-        // swap the artboard image to the host game mockup
-        hostImg.src = 'IMG_8338.jpeg'
-        // show the host youtube container inside the music player area
-        hostYTContainer.style.display = 'block'
-        var pick = (JSON.parse(localStorage.getItem('rounds')||'[]')[0]||{}).youtubeId || musicLibrary.sampleYouTubeId()
-        hostYT.src = 'https://www.youtube.com/embed/' + pick + '?rel=0&autoplay=1&controls=1'
+    function renderPlayers(players){
+      if(!playersList) return;
+      playersList.innerHTML = '';
+      if(!players || !players.length){ playersList.innerHTML = '<li><em>No players yet</em></li>'; return }
+      players.forEach(p=>{
+        const li = document.createElement('li');
+        li.textContent = p.name || 'Player';
+        const score = document.createElement('span'); score.textContent = (p.score || 0) + ' pts';
+        li.appendChild(score);
+        playersList.appendChild(li);
+      })
+      renderLeaderboard(players);
+    }
+
+    function renderLeaderboard(players){
+      if(!leaderboardEl) return;
+      const sorted = (players||[]).slice().sort((a,b)=> (b.score||0)-(a.score||0));
+      leaderboardEl.innerHTML = '<h3>Leaderboard</h3>' + (sorted.map((p,i)=>`<div>${i+1}. ${p.name} — ${p.score||0}</div>`).join(''));
+    }
+
+    // subscribe to players changes
+    if(supabase){
+      // initial refresh
+      refreshPlayers();
+      supabase.channel('public:players')
+        .on('postgres_changes', {event: '*', schema: 'public', table: 'players', filter: `room_id=eq.${room}`}, payload=>{
+          refreshPlayers();
+        }).subscribe();
+    }
+
+    // Start Game: create a first round and mark room started
+    if(btnStart){
+      btnStart.addEventListener('click', async ()=>{
+        if(!supabase){ alert('Supabase not configured — the UI will still run locally but multiplayer requires Supabase keys.'); return }
+        // pick a demo round from musicLibrary if available
+        let pick = null;
+        try{ if(window.musicLibrary && musicLibrary.quickCreate) pick = musicLibrary.quickCreate(); }catch(e){}
+        const round = {
+          id: 'r_'+Date.now(),
+          room_id: room,
+          round_index: 1,
+          question: (pick && pick.title) ? ('Guess: '+pick.title) : 'Guess the song',
+          choices: JSON.stringify(["A","B","C","D"]),
+          correct_choice: 'A',
+          youtube_id: (pick && pick.youtubeId)?pick.youtubeId: (pick && pick.youtubeId)||'3JZ4pnNtyxQ'
+        };
+        await supabase.from('rounds').insert([round]);
+        await supabase.from('rooms').update({started:true,current_round:round.id}).eq('id',room);
+        // show host music
+        hostMusic.innerHTML = `<iframe src="https://www.youtube.com/embed/${round.youtube_id}?rel=0&autoplay=1&controls=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+        roundPanel.innerHTML = `<div><strong>Round 1</strong><div>${round.question}</div><div><button id=btn-reveal class='btn'>Reveal Answer</button></div></div>`;
+
+        document.getElementById('btn-reveal').addEventListener('click', async ()=>{
+          // compute answers and update scores
+          const {data:answers} = await supabase.from('answers').select('*').eq('round_id', round.id);
+          if(answers && answers.length){
+            for(const a of answers){
+              const isCorrect = (a.choice === round.correct_choice);
+              if(isCorrect){
+                // increment player's score
+                await supabase.from('players').update({score: supabase.raw('score + 100')}).eq('id', a.player_id);
+                // mark answer
+                await supabase.from('answers').update({is_correct:true}).eq('id', a.id);
+              }
+            }
+          }
+        })
       })
     }
+
+    // Next round: simple demo increments index and creates new round
+    if(btnNext){ btnNext.addEventListener('click', async ()=>{
+      if(!supabase){ alert('Supabase not configured'); return }
+      const {data:existing} = await supabase.from('rounds').select('*').eq('room_id',room).order('round_index',{ascending:false}).limit(1);
+      const nextIndex = existing && existing[0] ? existing[0].round_index+1 : 1;
+      // create demo round
+      let pick = null;
+      try{ if(window.musicLibrary && musicLibrary.quickCreate) pick = musicLibrary.quickCreate(); }catch(e){}
+      const round = {
+        id: 'r_'+Date.now(),
+        room_id: room,
+        round_index: nextIndex,
+        question: (pick && pick.title) ? ('Guess: '+pick.title) : 'Guess the song',
+        choices: JSON.stringify(["A","B","C","D"]),
+        correct_choice: 'A',
+        youtube_id: (pick && pick.youtubeId)?pick.youtubeId:'3JZ4pnNtyxQ'
+      };
+      await supabase.from('rounds').insert([round]);
+      await supabase.from('rooms').update({current_round:round.id}).eq('id',room);
+      hostMusic.innerHTML = `<iframe src="https://www.youtube.com/embed/${round.youtube_id}?rel=0&autoplay=1&controls=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      roundPanel.innerHTML = `<div><strong>Round ${nextIndex}</strong><div>${round.question}</div><div><button id=btn-reveal class='btn'>Reveal Answer</button></div></div>`;
+    })}
+
+    // subscribe to rounds to show current question and update leaderboard when players change
+    if(supabase){
+      supabase.channel('public:rooms')
+        .on('postgres_changes', {event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${room}`}, async payload=>{
+          // when room.current_round changes, update roundPanel
+          const roomRow = (await supabase.from('rooms').select('*').eq('id',room).single()).data;
+          if(roomRow && roomRow.current_round){
+            const {data:round} = await supabase.from('rounds').select('*').eq('id',roomRow.current_round).single();
+            if(round){
+              roundPanel.innerHTML = `<div><strong>Round ${round.round_index}</strong><div>${round.question}</div><div><button id=btn-reveal class='btn'>Reveal Answer</button></div></div>`;
+              document.getElementById('btn-reveal').addEventListener('click', async ()=>{
+                const {data:answers} = await supabase.from('answers').select('*').eq('round_id', round.id);
+                if(answers && answers.length){
+                  for(const a of answers){
+                    const isCorrect = (a.choice === round.correct_choice);
+                    if(isCorrect){
+                      await supabase.from('players').update({score: supabase.raw('score + 100')}).eq('id', a.player_id);
+                      await supabase.from('answers').update({is_correct:true}).eq('id', a.id);
+                    }
+                  }
+                }
+              })
+              // set host music iframe
+              hostMusic.innerHTML = `<iframe src="https://www.youtube.com/embed/${round.youtube_id}?rel=0&autoplay=1&controls=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+            }
+          }
+        }).subscribe();
+    }
+
+    // refresh leaderboard periodically
+    setInterval(refreshPlayers, 2500);
   }
 
-  // Player page wiring
-  var playerRoomText = qs('player-room-text')
-  var questionArea = qs('question-area')
-  var leaderboardArea = qs('leaderboard-area')
-  var phonePreview = qs('phone-preview')
-  var hotPause = qs('hot-pause')
-  var hotEndRound = qs('hot-end-round')
+  // --- Player page ---
+  if(document.body.matches('.player-container')){
+    const joinPanel = document.getElementById('join-panel');
+    const nickInput = document.getElementById('nick');
+    const roomInput = document.getElementById('join-room');
+    const btnJoinRoom = document.getElementById('btn-join-room');
+    const btnQr = document.getElementById('btn-qr-scan');
+    const waiting = document.getElementById('waiting');
+    const questionCard = document.getElementById('question-card');
+    const questionText = document.getElementById('question-text');
+    const choicesEl = document.getElementById('choices');
+    const playerLeaderboard = document.getElementById('player-leaderboard');
+    const playerRoomTitle = document.getElementById('player-room');
 
-  if(playerRoomText){
-    var params = new URLSearchParams(location.search)
-    var room = params.get('room') || '---'
-    playerRoomText.textContent = 'Room ' + room
-    // show a placeholder question and leaderboard from localStorage state if present
-    var rounds = JSON.parse(localStorage.getItem('rounds')||'[]')
-    questionArea.textContent = rounds[0] ? (rounds[0].title + ' — ' + (rounds[0].artist||'')) : 'Waiting for host to start the round...'
-    var players = (JSON.parse(localStorage.getItem('room:'+room) || '{}').players) || []
-    leaderboardArea.innerHTML = players.length ? players.map(function(p,i){return '<div style="padding:6px 8px">'+(i+1)+'. '+(p.name||'Player')+'</div>'}).join('') : '<div style="opacity:0.8">No scores yet</div>'
-    phonePreview.textContent = 'Your phone preview'
+    const presetRoom = roomParam;
+    if(presetRoom) roomInput.value = presetRoom;
 
-    if(hotPause) hotPause.addEventListener('click', function(){ alert('Pause pressed (host only)') })
-    if(hotEndRound) hotEndRound.addEventListener('click', function(){ alert('End Round pressed (host only)') })
+    let myPlayerId = null;
+    let myRoom = null;
+    let hasAnswered = false;
+
+    btnJoinRoom.addEventListener('click', async ()=>{
+      const nick = (nickInput.value||'').trim() || ('Player'+Math.floor(Math.random()*1000));
+      const room = (roomInput.value||'').trim().toUpperCase();
+      if(!room){ alert('Enter room code'); return }
+      myRoom = room;
+      // create player row
+      myPlayerId = uid();
+      if(supabase){
+        await supabase.from('players').insert([{id:myPlayerId, room_id:room, name:nick, score:0}]);
+      }
+      joinPanel.classList.add('hidden');
+      waiting.classList.remove('hidden');
+      playerRoomTitle.textContent = 'Room ' + room;
+
+      // subscribe to room to get started and current round
+      if(supabase){
+        // watch rounds for this room
+        supabase.channel('player:rounds')
+          .on('postgres_changes', {event: '*', schema: 'public', table: 'rounds', filter: `room_id=eq.${room}`}, payload=>{
+            // when rounds change, pick latest round and show
+            showLatestRound(room);
+          }).subscribe();
+
+        // also watch rooms.started or current_round
+        supabase.channel('player:rooms')
+          .on('postgres_changes', {event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${room}`}, payload=>{
+            const newRoom = payload.new || payload.record || payload;
+            if(newRoom && newRoom.current_round){ showLatestRound(room); }
+          }).subscribe();
+
+        // watch answers to update leaderboard view
+        supabase.channel('player:answers')
+          .on('postgres_changes', {event: '*', schema: 'public', table: 'players', filter: `room_id=eq.${room}`}, payload=>{
+            // refresh leaderboard on players changes
+            refreshLeaderboard(room);
+          }).subscribe();
+      }
+
+      // initial show
+      showLatestRound(room);
+      refreshLeaderboard(room);
+    });
+
+    async function showLatestRound(room){
+      if(!supabase) return;
+      // fetch room to get current_round
+      const {data:roomRow} = await supabase.from('rooms').select('*').eq('id',room).single();
+      if(!roomRow || !roomRow.current_round){ return }
+      const {data:round} = await supabase.from('rounds').select('*').eq('id',roomRow.current_round).single();
+      if(!round) return;
+      waiting.classList.add('hidden');
+      questionCard.classList.remove('hidden');
+      hasAnswered = false;
+      questionText.textContent = round.question || 'Question';
+      // choices
+      let choices = [];
+      try{ choices = JSON.parse(round.choices) }catch(e){ choices = ['A','B','C','D'] }
+      choicesEl.innerHTML = '';
+      choices.forEach(c=>{
+        const b = document.createElement('div'); b.className = 'choice'; b.textContent = c;
+        b.addEventListener('click', async ()=>{
+          if(hasAnswered) return; hasAnswered = true; b.classList.add('disabled');
+          // submit answer
+          if(supabase){
+            await supabase.from('answers').insert([{id: 'a_'+Date.now()+'_'+Math.floor(Math.random()*1000), round_id: round.id, player_id: myPlayerId, choice: c}]);
+          }
+        })
+        choicesEl.appendChild(b);
+      })
+    }
+
+    async function refreshLeaderboard(room){
+      if(!supabase) return;
+      const {data:players} = await supabase.from('players').select('*').eq('room_id',room).order('score',{ascending:false});
+      if(!players) return;
+      playerLeaderboard.innerHTML = '<h3>Leaderboard</h3>' + players.map(p=>`<div>${p.name} — ${p.score||0}</div>`).join('');
+    }
+
+    btnQr.addEventListener('click', ()=>{
+      const room = roomInput.value.trim().toUpperCase();
+      if(!room) return alert('Enter room code to show QR');
+      const url = new URL('play.html?room='+encodeURIComponent(room), window.location.href).href;
+      const w = window.open('','QR','width=260,height=300');
+      w.document.body.innerHTML = `<img src="https://chart.googleapis.com/chart?chs=260x260&cht=qr&chl=${encodeURIComponent(url)}"/>`;
+    })
   }
 
 })();

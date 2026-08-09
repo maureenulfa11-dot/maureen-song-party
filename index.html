@@ -7,24 +7,44 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="artboard" id="home-artboard">
-    <img src="IMG_8341.jpeg" alt="Home mockup artboard" id="home-img">
+  <main class="container">
+    <header class="title">
+      <h1>Song Party</h1>
+      <p class="subtitle">Cozy party games — host music, players guess</p>
+    </header>
 
-    <!-- Invisible hotspots positioned with percentages. Adjust percentages to align with the mockup. -->
-    <!-- Start Hosting hotspot (covers the "Start Hosting" area on the mockup) -->
-    <button class="hotspot" id="hot-start-hosting" style="top:40.5%;left:8.5%;width:24%;height:8%" aria-label="Start Hosting"></button>
+    <section class="controls card">
+      <div class="mode-select">
+        <label>Game mode</label>
+        <select id="select-mode">
+          <option value="guess">Guess the Song</option>
+          <option value="fill">Fill in the Blank</option>
+        </select>
+      </div>
 
-    <!-- Join via QR hotspot (click to open prompt to enter room or scan QR) -->
-    <button class="hotspot" id="hot-join-qr" style="top:56%;left:60%;width:30%;height:22%" aria-label="Join with QR"></button>
+      <div class="buttons">
+        <button id="btn-host" class="btn primary">Start Hosting</button>
+        <button id="btn-join" class="btn">Join Room</button>
+      </div>
 
-    <!-- Fill in the Blank card hotspot -->
-    <button class="hotspot" id="hot-fill-card" style="top:70%;left:10%;width:33%;height:18%" aria-label="Fill in the Blank"></button>
+      <div class="qr-note">Open on your phone: <span id="live-qr" class="qr-inline"></span></div>
+    </section>
 
-    <!-- Guess the Song card hotspot -->
-    <button class="hotspot" id="hot-guess-card" style="top:70%;left:48%;width:33%;height:18%" aria-label="Guess the Song"></button>
+    <section class="how card">
+      <h2>How it works</h2>
+      <ol>
+        <li>Host creates a room and shares the code or QR.</li>
+        <li>Players join from their phones with a nickname.</li>
+        <li>Host plays music (host only). Players answer on their phones.</li>
+        <li>Correct = 100 points. Leaderboard updates in realtime.</li>
+      </ol>
+    </section>
 
+    <footer class="credits">Style inspired by mockups — real UI components (not an image).</footer>
   </main>
 
+  <script src="env.example.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

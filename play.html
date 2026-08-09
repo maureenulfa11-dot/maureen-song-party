@@ -7,27 +7,38 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="artboard" id="play-artboard">
-    <img src="IMG_8338.jpeg" alt="Host game artboard" id="play-img">
+  <main class="player-container card">
+    <header>
+      <h2 id="player-room">Room —</h2>
+    </header>
 
-    <!-- Player room text placed on top of the top bar area -->
-    <div id="player-room-text" class="overlay-text" style="top:6%;left:8%;width:40%;height:6%"></div>
+    <div id="join-panel" class="join-panel">
+      <label>Nickname</label>
+      <input id="nick" placeholder="Your nickname" />
+      <label>Room code</label>
+      <input id="join-room" placeholder="ROOMCODE" />
+      <div class="row">
+        <button id="btn-join-room" class="btn primary">Join</button>
+        <button id="btn-qr-scan" class="btn">Show QR</button>
+      </div>
+    </div>
 
-    <!-- Question area overlay (parchment) -->
-    <div id="question-area" class="overlay-text" style="top:28%;left:20%;width:56%;height:24%"></div>
+    <div id="waiting" class="hidden card">
+      <h3>Waiting for host...</h3>
+      <p id="wait-info">Players will appear in the host lobby.</p>
+    </div>
 
-    <!-- Leaderboard area -->
-    <div id="leaderboard-area" class="overlay-text list" style="top:12%;left:76%;width:20%;height:58%"></div>
+    <div id="question-card" class="hidden card">
+      <div id="question-text" class="question-text"></div>
+      <div id="choices" class="choices"></div>
+    </div>
 
-    <!-- Phone preview area (player phone) -->
-    <div id="phone-preview" class="overlay-text" style="top:68%;left:12%;width:28%;height:28%"></div>
-
-    <!-- Invisible hotspots for Pause and End Round on the mockup controls -->
-    <button class="hotspot" id="hot-pause" style="top:8%;left:46%;width:10%;height:6%" aria-label="Pause"></button>
-    <button class="hotspot" id="hot-end-round" style="top:8%;left:58%;width:10%;height:6%" aria-label="End Round"></button>
+    <div id="player-leaderboard" class="card leaderboard"></div>
 
   </main>
 
+  <script src="env.example.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
