@@ -1,4 +1,4 @@
-// app.js — Artboard hotspot wiring and overlays
+// app.js — Artboard hotspot wiring and overlays (updated QR generation to use relative URL for GitHub Pages)
 (function(){
   function qs(id){return document.getElementById(id)}
   function makeCode(){return Math.random().toString(36).substr(2,6).toUpperCase()}
@@ -22,7 +22,9 @@
   if(hotJoinQR){
     hotJoinQR.addEventListener('click', function(){
       // no visible input on artboard — use a prompt to enter the room code
-      var code = prompt('Enter room code to join').trim().toUpperCase()
+      var code = prompt('Enter room code to join')
+      if(!code) return
+      code = code.trim().toUpperCase()
       if(code) location.href = 'play.html?room='+code
     })
   }
@@ -87,7 +89,11 @@
     var room = params.get('room')
     if(room){
       if(roomCodeText) roomCodeText.textContent = room
-      if(hostQR) setQR(hostQR, location.origin + '/play.html?room=' + room)
+      if(hostQR){
+        // Use a relative URL for the QR so GitHub Pages hosting path works correctly
+        var playUrl = new URL('play.html?room=' + encodeURIComponent(room), window.location.href).href
+        setQR(hostQR, playUrl)
+      }
       // render players if any
       var state = JSON.parse(localStorage.getItem('room:'+room) || '{}')
       if(state.players && state.players.length){
