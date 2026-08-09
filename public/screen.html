@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Music Guess - Main Screen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .screen-container {
+            width: 100%;
+            max-width: 1400px;
+            height: 100vh;
+            background: linear-gradient(to bottom, #1a1a2e, #16213e);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background animations */
+        .bg-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-note {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0.1;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(10deg); }
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .room-info {
+            display: flex;
+            gap: 30px;
+            font-size: 18px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .room-code {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .player-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status {
+            padding: 8px 16px;
+            background: rgba(76, 175, 80, 0.3);
+            border-radius: 20px;
+            color: #4caf50;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Game State Sections */
+        .lobby-section, .game-section {
+            display: none;
+            flex: 1;
+            overflow: auto;
+        }
+
+        .lobby-section.active, .game-section.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Lobby Layout */
+        .lobby-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .lobby-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .lobby-card h2 {
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 22px;
+        }
+
+        .players-list {
+            list-style: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .player-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .player-status {
+            font-size: 12px;
+            color: #666;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .config-group {
+            margin: 15px 0;
+        }
+
+        .config-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .config-group select, .config-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .config-group select:focus, .config-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Game Section */
+        .game-content {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .game-main {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .round-info {
+            font-size: 18px;
+            color: #666;
+            text-align: center;
+        }
+
+        .audio-player {
+            width: 100%;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+        }
+
+        .audio-player audio {
+            width: 100%;
+        }
+
+        .song-info {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border-radius: 10px;
+        }
+
+        .song-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .song-artist {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .countdown {
+            font-size: 36px;
+            font-weight: bold;
+            color: #764ba2;
+            text-align: center;
+            padding: 20px;
+            background: rgba(118, 75, 162, 0.1);
+            border-radius: 10px;
+        }
+
+        .answer-display {
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .correct-answer {
+            font-size: 20px;
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .game-leaderboard {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .game-leaderboard h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .leaderboard-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .leaderboard-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leaderboard-rank {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 30px;
+        }
+
+        .leaderboard-score {
+            font-weight: bold;
+            color: #764ba2;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .leaderboard-name {
+            flex: 1;
+            margin: 0 15px;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .controls .btn {
+            flex: 1;
+        }
+
+        .finish-screen {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .finish-screen.active {
+            display: flex;
+        }
+
+        .finish-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+
+        .finish-leaderboard {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            min-width: 400px;
+        }
+
+        .finish-leaderboard h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .finish-leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border-radius: 8px;
+        }
+
+        .medal {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 1200px) {
+            .game-content {
+                grid-template-columns: 1fr;
+            }
+
+            .lobby-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-container">
+        <!-- Background animations -->
+        <div class="bg-animation" id="bgAnimation"></div>
+
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="room-info">
+                    <div class="room-code">
+                        🎮 Room Code: <span id="roomCode">---</span>
+                    </div>
+                    <div class="player-count">
+                        👥 Players: <span id="playerCount">0</span>
+                    </div>
+                </div>
+                <div class="status" id="gameStatus">Waiting for setup...</div>
+            </div>
+
+            <!-- LOBBY SECTION -->
+            <div class="lobby-section active">
+                <div class="lobby-content">
+                    <!-- Setup Card -->
+                    <div class="lobby-card">
+                        <h2>⚙️ Game Setup</h2>
+                        
+                        <div class="config-group">
+                            <label for="genreSelect">Music Genre:</label>
+                            <select id="genreSelect">
+                                <option value="pop">Pop</option>
+                                <option value="rock">Rock</option>
+                                <option value="hip hop">Hip Hop</option>
+                                <option value="electronic">Electronic</option>
+                                <option value="indie">Indie</option>
+                            </select>
+                        </div>
+
+                        <div class="config-group">
+                            <label for="roundsInput">Number of Rounds:</label>
+                            <input type="number" id="roundsInput" value="5" min="1" max="20">
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-primary" onclick="generatePlaylist()">
+                                🎵 Generate Playlist
+                            </button>
+                            <button class="btn btn-secondary" onclick="startGame()" id="startGameBtn" disabled>
+                                ▶️ Start Game
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Players Card -->
+                    <div class="lobby-card">
+                        <h2>👥 Players</h2>
+                        <ul class="players-list" id="playersList">
+                            <li class="player-item">
+                                <span class="player-name">Waiting for players...</span>
+                                <span class="player-status">—</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAME SECTION -->
+            <div class="game-section">
+                <div class="game-content">
+                    <!-- Main Game Area -->
+                    <div class="game-main">
+                        <div class="round-info">
+                            Round <span id="currentRound">1</span> / <span id="totalRounds">5</span>
+                        </div>
+
+                        <div class="song-info">
+                            <div class="song-title" id="currentSongTitle">Loading...</div>
+                            <div class="song-artist" id="currentSongArtist">Loading...</div>
+                        </div>
+
+                        <div class="audio-player">
+                            <audio id="audioPlayer" controls controlsList="nodownload">
+                                <source id="audioSource" src="" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+
+                        <div class="countdown" id="countdown">20</div>
+
+                        <div class="answer-display" id="answerDisplay" style="display: none;">
+                            <div class="correct-answer">
+                                ✓ Answer: <span id="revealedAnswer">—</span>
+                            </div>
+                        </div>
+
+                        <div class="controls">
+                            <button class="btn btn-primary" onclick="revealAnswer()" id="revealBtn">
+                                👁️ Reveal Answer
+                            </button>
+                            <button class="btn btn-secondary" onclick="nextRound()" id="nextBtn" style="display: none;">
+                                ⏭️ Next Round
+                            </button>
+                            <button class="btn btn-secondary" onclick="endGame()">
+                                ⛔ End Game
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard -->
+                    <div class="game-leaderboard">
+                        <h3>🏆 Leaderboard</h3>
+                        <ul class="leaderboard-list" id="gameLeaderboard">
+                            <li class="leaderboard-item">
+                                <span class="leaderboard-rank">#1</span>
+                                <span class="leaderboard-name">No players yet</span>
+                                <span class="leaderboard-score">0 pts</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finish Screen -->
+        <div class="finish-screen" id="finishScreen">
+            <div class="finish-title">🎉 Game Over!</div>
+            <div class="finish-leaderboard">
+                <h3>Final Leaderboard</h3>
+                <div id="finishLeaderboard"></div>
+            </div>
+            <button class="btn btn-primary" style="width: 200px;" onclick="location.reload()">
+                🔄 Play Again
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        // ============ SOCKET.IO SETUP ============
+        const socket = io();
+        let roomCode = '';
+        let gameState = 'lobby';
+        let currentRoundIndex = 0;
+        let totalRounds = 5;
+        let countdownInterval;
+
+        // ============ INITIALIZATION ============
+        socket.on('connect', () => {
+            console.log('✅ Connected to server');
+            socket.emit('screen-connect', (data) => {
+                roomCode = data.roomCode;
+                document.getElementById('roomCode').textContent = roomCode;
+                updateStatus('Ready - Players can join');
+                console.log(`📺 Screen room: ${roomCode}`);
+            });
+        });
+
+        // ============ GAME EVENTS ============
+        socket.on('player-joined', (data) => {
+            console.log(`👤 ${data.playerName} joined`);
+            document.getElementById('playerCount').textContent = data.players.length;
+            updatePlayersList(data.players);
+        });
+
+        socket.on('player-left', (data) => {
+            console.log(`👤 ${data.playerName} left`);
+            document.getElementById('playerCount').textContent = data.players.length;
+            updatePlayersList(data.players);
+        });
+
+        socket.on('playlist-ready', (data) => {
+            console.log(`🎵 Playlist ready: ${data.playlistLength} tracks`);
+            totalRounds = data.playlistLength;
+            document.getElementById('totalRounds').textContent = totalRounds;
+            document.getElementById('startGameBtn').disabled = false;
+            updateStatus('Playlist loaded - Ready to start!');
+        });
+
+        socket.on('round-started', (data) => {
+            console.log(`🎮 Round started`);
+            gameState = 'playing';
+            currentRoundIndex++;
+
+            document.getElementById('currentRound').textContent = currentRoundIndex;
+            document.getElementById('currentSongTitle').textContent = data.question.title;
+            document.getElementById('currentSongArtist').textContent = data.question.preview ? 'Playing...' : 'No preview available';
+            document.getElementById('audioSource').src = data.question.preview;
+            document.getElementById('answerDisplay').style.display = 'none';
+            document.getElementById('revealBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+
+            // Play audio
+            const audio = document.getElementById('audioPlayer');
+            audio.load();
+            audio.play().catch(e => console.warn('Auto-play blocked:', e));
+
+            // Start countdown
+            startCountdown(20);
+            updateStatus('Round in progress...');
+        });
+
+        socket.on('leaderboard-update', (data) => {
+            updateLeaderboard(data.leaderboard);
+        });
+
+        socket.on('answer-revealed', (data) => {
+            console.log(`✓ Answer revealed`);
+            gameState = 'revealing';
+            document.getElementById('audioPlayer').pause();
+            clearInterval(countdownInterval);
+            document.getElementById('countdown').textContent = '—';
+
+            document.getElementById('revealedAnswer').textContent = `${data.correctAnswer} by ${data.correctArtist}`;
+            document.getElementById('answerDisplay').style.display = 'block';
+            document.getElementById('revealBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+
+            updateLeaderboard(data.leaderboard);
+            updateStatus('Waiting for next round...');
+        });
+
+        socket.on('game-finished', (data) => {
+            console.log(`🎉 Game finished`);
+            gameState = 'finished';
+            document.getElementById('audioPlayer').pause();
+            clearInterval(countdownInterval);
+
+            showFinishScreen(data.leaderboard);
+        });
+
+        socket.on('game-ended', () => {
+            location.reload();
+        });
+
+        socket.on('disconnect', () => {
+            console.log('❌ Disconnected from server');
+            updateStatus('Disconnected!');
+        });
+
+        // ============ FUNCTIONS ============
+
+        function updateStatus(message) {
+            document.getElementById('gameStatus').textContent = message;
+        }
+
+        function updatePlayersList(players) {
+            const list = document.getElementById('playersList');
+            if (players.length === 0) {
+                list.innerHTML = '<li class="player-item"><span class="player-name">Waiting for players...</span></li>';
+                return;
+            }
+
+            list.innerHTML = players.map(p => `
+                <li class="player-item">
+                    <span class="player-name">${p.name}</span>
+                    <span class="player-status">${p.score} pts</span>
+                </li>
+            `).join('');
+        }
+
+        function updateLeaderboard(leaderboard) {
+            const list = document.getElementById('gameLeaderboard');
+            list.innerHTML = leaderboard.map((player, idx) => `
+                <li class="leaderboard-item">
+                    <span class="leaderboard-rank">#${idx + 1}</span>
+                    <span class="leaderboard-name">${player.name}</span>
+                    <span class="leaderboard-score">${player.score} pts</span>
+                </li>
+            `).join('');
+        }
+
+        function startCountdown(seconds) {
+            let remaining = seconds;
+            document.getElementById('countdown').textContent = remaining;
+
+            countdownInterval = setInterval(() => {
+                remaining--;
+                document.getElementById('countdown').textContent = Math.max(0, remaining);
+
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+
+        function generatePlaylist() {
+            const genre = document.getElementById('genreSelect').value;
+            const rounds = parseInt(document.getElementById('roundsInput').value);
+
+            updateStatus('Generating playlist...');
+            socket.emit('generate-playlist', { genre, rounds }, (result) => {
+                if (result.success) {
+                    console.log('✅ Playlist generated');
+                } else {
+                    console.error('❌ Failed to generate playlist');
+                    updateStatus('Failed to generate playlist');
+                }
+            });
+        }
+
+        function startGame() {
+            updateStatus('Starting game...');
+            document.querySelector('.lobby-section').classList.remove('active');
+            document.querySelector('.game-section').classList.add('active');
+
+            socket.emit('start-game', (result) => {
+                if (result.success) {
+                    console.log('✅ Game started');
+                } else {
+                    console.error('❌ Failed to start game:', result.error);
+                    updateStatus('Failed to start game: ' + result.error);
+                }
+            });
+        }
+
+        function revealAnswer() {
+            socket.emit('reveal-answer', (result) => {
+                if (result.success) {
+                    console.log('✅ Answer revealed');
+                } else {
+                    console.error('❌ Failed to reveal answer');
+                }
+            });
+        }
+
+        function nextRound() {
+            socket.emit('next-round', (result) => {
+                if (!result.hasMore) {
+                    console.log('🎉 Game finished');
+                } else {
+                    console.log('➡️ Next round');
+                }
+            });
+        }
+
+        function endGame() {
+            if (confirm('Are you sure you want to end the game?')) {
+                socket.emit('end-game');
+            }
+        }
+
+        function showFinishScreen(leaderboard) {
+            const medals = ['🥇', '🥈', '🥉'];
+            const html = leaderboard.map((player, idx) => `
+                <div class="finish-leaderboard-item">
+                    <span class="medal">${medals[idx] || '🏅'}</span>
+                    <span>${player.name}</span>
+                    <span style="font-weight: bold;">${player.score} pts</span>
+                </div>
+            `).join('');
+
+            document.getElementById('finishLeaderboard').innerHTML = html;
+            document.getElementById('finishScreen').classList.add('active');
+        }
+
+        // Add floating notes to background
+        function createFloatingNotes() {
+            const container = document.getElementById('bgAnimation');
+            const notes = ['♪', '♫', '♬', '🎵'];
+            for (let i = 0; i < 20; i++) {
+                const note = document.createElement('div');
+                note.className = 'floating-note';
+                note.textContent = notes[Math.floor(Math.random() * notes.length)];
+                note.style.left = Math.random() * 100 + '%';
+                note.style.top = Math.random() * 100 + '%';
+                note.style.animationDelay = Math.random() * 3 + 's';
+                container.appendChild(note);
+            }
+        }
+
+        createFloatingNotes();
+    </script>
+</body>
+</html>
