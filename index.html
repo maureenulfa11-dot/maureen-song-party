@@ -1,201 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 Maureen's Song Party</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Song Party — Home</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <!-- DECORATIVE ELEMENTS -->
-    <div id="decorations"></div>
-
-    <!-- HOME PAGE -->
-    <div id="homePage" class="page active">
-        <div class="container">
-            <!-- Header -->
-            <div class="home-header">
-                <h1>Maureen's<span class="subtitle">Song Party</span></h1>
-                <p class="subtitle-text">A cozy music party game with two fun ways to play!</p>
-            </div>
-
-            <!-- Game Mode Cards -->
-            <div class="game-mode-cards">
-                <div class="game-mode-card">
-                    <div class="game-mode-card-icon">🎵</div>
-                    <h3>Fill in the Blank</h3>
-                    <p>Test your lyrics and complete the song!</p>
-                </div>
-                <div class="game-mode-card">
-                    <div class="game-mode-card-icon">❓</div>
-                    <h3>Guess the Song</h3>
-                    <p>Listen close and guess the song title!</p>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <button class="btn btn-primary" onclick="goToPage('hostPage')" style="font-size: 18px;">
-                    🎵 Start Hosting
-                </button>
-                <div class="button-group">
-                    <button class="btn btn-secondary" onclick="goToPage('playPage')">
-                        📱 Join with QR
-                    </button>
-                    <button class="btn btn-secondary" onclick="goToPage('composerPage')">
-                        ⚡ Quick Create
-                    </button>
-                </div>
-            </div>
-
-            <!-- Loading Animation -->
-            <div class="loading-section">
-                <div class="walking-cat">
-                    <div class="cat-emoji">🐱</div>
-                </div>
-                <p class="loading-text">Let's have fun!</p>
-            </div>
-        </div>
+<body class="home-bg">
+  <div class="overlay">
+    <div class="top-left">
+      <button id="start-hosting" class="ghost-btn">Start Hosting</button>
     </div>
-
-    <!-- QUICK CREATE PAGE -->
-    <div id="composerPage" class="page">
-        <div class="container">
-            <div class="page-header">
-                <h2>Quick Create</h2>
-                <button class="btn btn-secondary" onclick="goToPage('homePage')">← Back</button>
-            </div>
-
-            <!-- Tabs -->
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('myPlaylistTab')">My Playlist</button>
-                <button class="tab-btn" onclick="switchTab('autoLibraryTab')">Auto Library</button>
-            </div>
-
-            <!-- My Playlist Tab -->
-            <div id="myPlaylistTab" class="tab-content active">
-                <div class="card">
-                    <h3>🎵 Song Source</h3>
-                    <div class="form-group">
-                        <label>Paste YouTube link or type a song name</label>
-                        <input type="text" id="songSource" placeholder="e.g., Sunflower Fields">
-                    </div>
-                    <div class="form-group">
-                        <label>Game Mode</label>
-                        <select id="gameModeSelect">
-                            <option value="fill-in-blank">Fill in the Blank</option>
-                            <option value="guess-song">Guess the Song</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-primary" onclick="addSongToPlaylist()" style="width: 100%;">
-                        ➕ Add Song
-                    </button>
-                </div>
-                <div class="card" style="margin-top: 20px;">
-                    <h3>📋 Your Playlist</h3>
-                    <div id="playlistItems" style="max-height: 300px; overflow-y: auto;">
-                        <p style="color: #999;">No songs added yet</p>
-                    </div>
-                    <button class="btn btn-success" onclick="startGame()" style="width: 100%; margin-top: 20px;">
-                        ▶️ Start Game
-                    </button>
-                </div>
-            </div>
-
-            <!-- Auto Library Tab -->
-            <div id="autoLibraryTab" class="tab-content">
-                <div class="card">
-                    <h3>🎵 Genre</h3>
-                    <div class="form-group">
-                        <select id="genreSelect">
-                            <option value="pop">Pop</option>
-                            <option value="ballad">Ballad</option>
-                            <option value="rock">Rock</option>
-                            <option value="indie">Indie</option>
-                        </select>
-                    </div>
-                    <h3 style="margin-top: 20px;">📅 Era</h3>
-                    <div class="form-group">
-                        <select id="eraSelect">
-                            <option value="all">1960 to Now</option>
-                            <option value="1980s">1980s</option>
-                            <option value="1990s">1990s</option>
-                            <option value="2000s">2000s</option>
-                            <option value="2010s">2010s</option>
-                            <option value="2020s">2020s</option>
-                        </select>
-                    </div>
-                    <h3 style="margin-top: 20px;">🎮 Number of Rounds</h3>
-                    <div class="form-group">
-                        <input type="number" id="roundsInput" value="5" min="1" max="20">
-                    </div>
-                    <button class="btn btn-primary" onclick="generateAutoPlaylist()" style="width: 100%; margin-top: 20px;">
-                        🎲 Generate Playlist
-                    </button>
-                </div>
-            </div>
-        </div>
+    <div class="center-join">
+      <input id="join-code" placeholder="Enter room code" />
+      <button id="join-btn">Join</button>
     </div>
-
-    <!-- HOST PAGE -->
-    <div id="hostPage" class="page">
-        <div class="container">
-            <div class="page-header">
-                <h2>🎮 Host Lobby</h2>
-                <button class="btn btn-secondary" onclick="goToPage('homePage')">← Home</button>
-            </div>
-            <div id="lobbyState">
-                <div class="grid-2">
-                    <div class="room-code-card">
-                        <div class="room-code-label">Room Code</div>
-                        <div class="room-code-display" id="displayRoomCode">1234</div>
-                        <div class="room-code-help">Share with your friends!</div>
-                    </div>
-                    <div class="qr-card">
-                        <div class="qr-card-label">Scan to Join</div>
-                        <div class="qr-container" id="qrContainer">
-                            <div style="text-align: center; color: #999; padding: 40px;">QR Code</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card" style="margin-top: 20px;">
-                    <h3>👥 Players (0)</h3>
-                    <ul class="player-list">
-                        <li class="player-item"><span>No players yet</span></li>
-                    </ul>
-                </div>
-                <div class="card" style="margin-top: 20px;">
-                    <button class="btn btn-success" style="width: 100%;">
-                        ▶️ Start Game
-                    </button>
-                </div>
-            </div>
-        </div>
+    <div class="qr-area">
+      <img id="qr-img" alt="room qr" />
+      <div class="qr-caption">Scan to join</div>
     </div>
+  </div>
 
-    <!-- PLAY PAGE -->
-    <div id="playPage" class="page">
-        <div class="container">
-            <div id="loginState" style="margin-top: 60px;">
-                <div class="card" style="max-width: 400px; margin: 0 auto;">
-                    <h2 style="text-align: center;">🎮 Join Game</h2>
-                    <div class="form-group">
-                        <label>Room Code</label>
-                        <input type="text" placeholder="Enter code" maxlength="4">
-                    </div>
-                    <div class="form-group">
-                        <label>Your Name</label>
-                        <input type="text" placeholder="Enter your name">
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%;">
-                        ✓ Join Game
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="musicLibrary.js"></script>
-    <script src="app.js"></script>
+  <script src="musicLibrary.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

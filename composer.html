@@ -1,22 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 Quick Create - Maureen's Song Party</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Song Party — Composer</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <div id="decorations"></div>
-    <div class="page active">
-        <div class="container" style="margin-top: 20px;">
-            <div class="card">
-                <h2>Quick Create</h2>
-                <p style="margin: 20px 0;">This page is integrated into the main app.</p>
-                <a href="index.html" class="btn btn-primary" style="display: inline-block; margin-top: 20px;">← Go to Main App</a>
-            </div>
-        </div>
+<body class="composer-bg">
+  <div class="overlay">
+    <div class="composer-panel">
+      <h2>Quick Create</h2>
+      <button id="quick-create" class="primary-btn">Quick Create</button>
+      <div id="created-list"></div>
+      <div class="composer-actions">
+        <a href="index.html" class="ghost-link">Back</a>
+      </div>
     </div>
-    <script src="app.js"></script>
+  </div>
+
+  <script src="musicLibrary.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
