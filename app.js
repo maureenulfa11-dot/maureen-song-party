@@ -27,11 +27,8 @@
         // create room row
         await supabase.from('rooms').insert([{id:code, owner:'host', mode}]);
       }
-      // navigate to host page
-      const url = new URL(window.location.href);
-      url.pathname = 'host.html';
-      url.search = '?room='+encodeURIComponent(code);
-      window.location = url.href;
+      // navigate to host page using URL constructor to respect subpaths
+      window.location.href = new URL('host.html?room=' + encodeURIComponent(code), window.location.href).href;
     })
   }
 
@@ -39,19 +36,16 @@
     btnJoin.addEventListener('click', ()=>{
       const code = prompt('Enter room code to join');
       if(!code) return;
-      const url = new URL(window.location.href);
-      url.pathname = 'play.html';
-      url.search = '?room='+encodeURIComponent(code.trim().toUpperCase());
-      window.location = url.href;
+      window.location.href = new URL('play.html?room=' + encodeURIComponent(code.trim().toUpperCase()), window.location.href).href;
     })
   }
 
   // show a live QR for the index page (join link)
   if(liveQR){
     const url = new URL(window.location.href);
-    url.pathname = 'play.html';
+    url.pathname = url.pathname; // keep current base
     url.search = '?room=' + (new URLSearchParams(location.search).get('room') || '');
-    setQR(liveQR, url.href);
+    setQR(liveQR, new URL('play.html' + url.search, window.location.href).href);
   }
 
   // --- Host page ---
@@ -134,14 +128,21 @@
           // compute answers and update scores
           const {data:answers} = await supabase.from('answers').select('*').eq('round_id', round.id);
           if(answers && answers.length){
-            for(const a of answers){
-              const isCorrect = (a.choice === round.correct_choice);
-              if(isCorrect){
-                // increment player's score
-                await supabase.from('players').update({score: supabase.raw('score + 100')}).eq('id', a.player_id);
-                // mark answer
-                await supabase.from('answers').update({is_correct:true}).eq('id', a.id);
-              }
+            // group correct answers by player
+            const correctAnswers = answers.filter(a=>a.choice === round.correct_choice && !a.is_correct);
+            const byPlayer = {};
+            correctAnswers.forEach(a=>{ byPlayer[a.player_id] = (byPlayer[a.player_id]||0) + 1 });
+            // for each player, fetch current score and update
+            for(const playerId of Object.keys(byPlayer)){
+              // fetch current score
+              const {data:playersRows} = await supabase.from('players').select('score').eq('id', playerId).limit(1);
+              const current = (playersRows && playersRows[0] && playersRows[0].score) ? playersRows[0].score : 0;
+              const newScore = current + 100 * byPlayer[playerId];
+              await supabase.from('players').update({score:newScore}).eq('id', playerId);
+            }
+            // mark answers as processed
+            for(const a of correctAnswers){
+              await supabase.from('answers').update({is_correct:true}).eq('id', a.id);
             }
           }
         })
@@ -184,12 +185,17 @@
               document.getElementById('btn-reveal').addEventListener('click', async ()=>{
                 const {data:answers} = await supabase.from('answers').select('*').eq('round_id', round.id);
                 if(answers && answers.length){
-                  for(const a of answers){
-                    const isCorrect = (a.choice === round.correct_choice);
-                    if(isCorrect){
-                      await supabase.from('players').update({score: supabase.raw('score + 100')}).eq('id', a.player_id);
-                      await supabase.from('answers').update({is_correct:true}).eq('id', a.id);
-                    }
+                  const correctAnswers = answers.filter(a=>a.choice === round.correct_choice && !a.is_correct);
+                  const byPlayer = {};
+                  correctAnswers.forEach(a=>{ byPlayer[a.player_id] = (byPlayer[a.player_id]||0) + 1 });
+                  for(const playerId of Object.keys(byPlayer)){
+                    const {data:playersRows} = await supabase.from('players').select('score').eq('id', playerId).limit(1);
+                    const current = (playersRows && playersRows[0] && playersRows[0].score) ? playersRows[0].score : 0;
+                    const newScore = current + 100 * byPlayer[playerId];
+                    await supabase.from('players').update({score:newScore}).eq('id', playerId);
+                  }
+                  for(const a of correctAnswers){
+                    await supabase.from('answers').update({is_correct:true}).eq('id', a.id);
                   }
                 }
               })
@@ -239,7 +245,7 @@
       waiting.classList.remove('hidden');
       playerRoomTitle.textContent = 'Room ' + room;
 
-      // subscribe to room to get started and current round
+      // subscribe to rounds and players for this room
       if(supabase){
         // watch rounds for this room
         supabase.channel('player:rounds')
@@ -255,10 +261,9 @@
             if(newRoom && newRoom.current_round){ showLatestRound(room); }
           }).subscribe();
 
-        // watch answers to update leaderboard view
-        supabase.channel('player:answers')
+        // watch players to update leaderboard on player join/score
+        supabase.channel('player:players')
           .on('postgres_changes', {event: '*', schema: 'public', table: 'players', filter: `room_id=eq.${room}`}, payload=>{
-            // refresh leaderboard on players changes
             refreshLeaderboard(room);
           }).subscribe();
       }
