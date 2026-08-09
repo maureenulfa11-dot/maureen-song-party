@@ -50,7 +50,7 @@
 
   // --- Host page ---
   const roomParam = new URLSearchParams(location.search).get('room');
-  if(document.body.matches('.host-container')){
+  if(document.body.matches('.host-page')){
     const room = roomParam;
     const roomCodeEl = document.getElementById('room-code');
     const playersList = document.getElementById('players-list');
@@ -75,7 +75,7 @@
     function renderPlayers(players){
       if(!playersList) return;
       playersList.innerHTML = '';
-      if(!players || !players.length){ playersList.innerHTML = '<li><em>No players yet</em></li>'; return }
+      if(!players || !players.length){ playersList.innerHTML = ''; return }
       players.forEach(p=>{
         const li = document.createElement('li');
         li.textContent = p.name || 'Player';
@@ -84,6 +84,12 @@
         playersList.appendChild(li);
       })
       renderLeaderboard(players);
+      updatePlayerCount(players.length);
+    }
+
+    function updatePlayerCount(count){
+      const countEl = document.getElementById('player-count');
+      if(countEl) countEl.textContent = count;
     }
 
     function renderLeaderboard(players){
@@ -122,7 +128,7 @@
         await supabase.from('rooms').update({started:true,current_round:round.id}).eq('id',room);
         // show host music
         hostMusic.innerHTML = `<iframe src="https://www.youtube.com/embed/${round.youtube_id}?rel=0&autoplay=1&controls=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-        roundPanel.innerHTML = `<div><strong>Round 1</strong><div>${round.question}</div><div><button id=btn-reveal class='btn'>Reveal Answer</button></div></div>`;
+        roundPanel.innerHTML = `<div><strong>Round 1</strong><div>${round.question}</div><div><button id=btn-reveal class='btn btn-primary'>Reveal Answer</button></div></div>`;
 
         document.getElementById('btn-reveal').addEventListener('click', async ()=>{
           // compute answers and update scores
@@ -169,7 +175,7 @@
       await supabase.from('rounds').insert([round]);
       await supabase.from('rooms').update({current_round:round.id}).eq('id',room);
       hostMusic.innerHTML = `<iframe src="https://www.youtube.com/embed/${round.youtube_id}?rel=0&autoplay=1&controls=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-      roundPanel.innerHTML = `<div><strong>Round ${nextIndex}</strong><div>${round.question}</div><div><button id=btn-reveal class='btn'>Reveal Answer</button></div></div>`;
+      roundPanel.innerHTML = `<div><strong>Round ${nextIndex}</strong><div>${round.question}</div><div><button id=btn-reveal class='btn btn-primary'>Reveal Answer</button></div></div>`;
     })}
 
     // subscribe to rounds to show current question and update leaderboard when players change
@@ -181,7 +187,7 @@
           if(roomRow && roomRow.current_round){
             const {data:round} = await supabase.from('rounds').select('*').eq('id',roomRow.current_round).single();
             if(round){
-              roundPanel.innerHTML = `<div><strong>Round ${round.round_index}</strong><div>${round.question}</div><div><button id=btn-reveal class='btn'>Reveal Answer</button></div></div>`;
+              roundPanel.innerHTML = `<div><strong>Round ${round.round_index}</strong><div>${round.question}</div><div><button id=btn-reveal class='btn btn-primary'>Reveal Answer</button></div></div>`;
               document.getElementById('btn-reveal').addEventListener('click', async ()=>{
                 const {data:answers} = await supabase.from('answers').select('*').eq('round_id', round.id);
                 if(answers && answers.length){
@@ -211,7 +217,7 @@
   }
 
   // --- Player page ---
-  if(document.body.matches('.player-container')){
+  if(document.body.matches('.player-page')){
     const joinPanel = document.getElementById('join-panel');
     const nickInput = document.getElementById('nick');
     const roomInput = document.getElementById('join-room');
@@ -222,6 +228,7 @@
     const questionText = document.getElementById('question-text');
     const choicesEl = document.getElementById('choices');
     const playerLeaderboard = document.getElementById('player-leaderboard');
+    const playerLeaderboardLive = document.getElementById('player-leaderboard-live');
     const playerRoomTitle = document.getElementById('player-room');
 
     const presetRoom = roomParam;
@@ -243,7 +250,7 @@
       }
       joinPanel.classList.add('hidden');
       waiting.classList.remove('hidden');
-      playerRoomTitle.textContent = 'Room ' + room;
+      playerRoomTitle.textContent = '🎵 Room ' + room;
 
       // subscribe to rounds and players for this room
       if(supabase){
@@ -305,7 +312,9 @@
       if(!supabase) return;
       const {data:players} = await supabase.from('players').select('*').eq('room_id',room).order('score',{ascending:false});
       if(!players) return;
-      playerLeaderboard.innerHTML = '<h3>Leaderboard</h3>' + players.map(p=>`<div>${p.name} — ${p.score||0}</div>`).join('');
+      const leaderboardHTML = '<h3>Leaderboard</h3>' + players.map(p=>`<div>${p.name} — ${p.score||0}</div>`).join('');
+      if(playerLeaderboard) playerLeaderboard.innerHTML = leaderboardHTML;
+      if(playerLeaderboardLive) playerLeaderboardLive.innerHTML = leaderboardHTML;
     }
 
     btnQr.addEventListener('click', ()=>{
