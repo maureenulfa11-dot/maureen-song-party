@@ -1,35 +1,22 @@
-/* styles.css — uses the uploaded mockup images as full-page backgrounds */
-:root{
-  --accent:#ff5a5f;
-  --muted:#ffffffcc;
-}
-html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,Helvetica,sans-serif;color:#fff}
-body{background:#000 no-repeat center/cover}
-.home-bg{background-image:url('IMG_8341.jpeg')}
-.composer-bg{background-image:url('IMG_8340.jpeg')}
-.host-lobby-bg{background-image:url('IMG_8339.jpeg')}
-.host-game-bg{background-image:url('IMG_8338.jpeg')}
-.overlay{position:relative;height:100vh;width:100vw}
-.top-left{position:absolute;left:40px;top:40px}
-.ghost-btn{background:transparent;border:2px solid #fff;color:#fff;padding:12px 18px;border-radius:8px;font-weight:600}
-.primary-btn{background:var(--accent);border:none;padding:12px 18px;border-radius:8px;color:#fff;font-weight:700}
-.center-join{position:absolute;left:50%;transform:translateX(-50%);top:60% display:flex;align-items:center;gap:8px}
-.center-join input{padding:10px 12px;border-radius:8px;border:none;width:220px}
-.center-join button{margin-left:8px}
-.qr-area{position:absolute;right:48px;bottom:48px;text-align:center}
-.qr-area.small{right:48px;top:130px}
-.qr-area img{width:140px;height:140px;object-fit:cover;border-radius:8px;border:4px solid #fff}
-.qr-caption{margin-top:8px;color:#fff;font-weight:600}
-.lobby-panel{position:absolute;left:60px;top:140px}
-.lobby-panel h1{font-size:48px;letter-spacing:6px}
-#players-list{margin-top:24px}
-.player-card{background:#00000088;padding:8px;border-radius:8px;margin-bottom:8px}
-.hidden{display:none}
-.composer-panel{position:absolute;left:60px;top:120px;background:transparent}
-.composer-panel h2{font-size:34px}
-#created-list{margin-top:12px}
-.player-panel{position:absolute;left:60px;top:120px}
-.host-player{position:fixed;right:20px;bottom:20px}
-.host-player iframe{border-radius:12px}
-.ghost-link{color:#fff;text-decoration:underline}
-@media(max-width:600px){.qr-area img{width:110px;height:110px}}
+/* styles.css — Artboard-based UI using image <img> elements and invisible hotspots */
+:root{--subtle-outline:rgba(255,255,255,0.12);--text:#ffffff;--muted-text:rgba(255,255,255,0.8)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#000;color:var(--text);font-family:Inter,system-ui,Arial,Helvetica,sans-serif}
+main.artboard{position:relative;max-width:1200px;margin:0 auto}
+main.artboard img{display:block;width:100%;height:auto;user-select:none}
+/* Hotspots are fully transparent and occupy percentage areas over the artboard image */
+.hotspot{position:absolute;background:transparent;border:0;opacity:0;padding:0;margin:0;cursor:pointer}
+.hotspot:focus,.hotspot:hover{outline:2px solid var(--subtle-outline);outline-offset:0}
+/* Inputs that blend into the artboard — transparent backgrounds, no borders */
+.invisible-input{position:absolute;appearance:none;background:transparent;border:0;color:var(--text);font-size:1rem;outline:none;padding:0 6px}
+.invisible-input::placeholder{color:rgba(255,255,255,0.6)}
+/* Overlays that render text in specific areas */
+.overlay-text{position:absolute;pointer-events:none;color:var(--text);font-weight:700;display:flex;align-items:center;justify-content:flex-start;padding:4px 6px}
+.overlay-text.list{flex-direction:column;align-items:flex-start;overflow:hidden}
+/* QR overlay image */
+.qr-overlay{position:absolute;object-fit:cover;border-radius:6px}
+/* Host YouTube container will be shown only for host and positioned into the artboard area */
+#host-yt-container iframe{border:0;border-radius:6px}
+/* Responsive: keep artboard centered and not cropped */
+@media (max-width:900px){main.artboard{max-width:700px}}
+@media (max-width:420px){main.artboard{max-width:360px}}

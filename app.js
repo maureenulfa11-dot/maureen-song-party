@@ -1,112 +1,141 @@
-// app.js — handles routing and overlays, uses mock images as backgrounds
-
+// app.js — Artboard hotspot wiring and overlays
 (function(){
-  // utility
   function qs(id){return document.getElementById(id)}
   function makeCode(){return Math.random().toString(36).substr(2,6).toUpperCase()}
-  function setQR(imgEl, url){
-    if(!imgEl) return
-    var encoded = encodeURIComponent(url)
-    // use Google Chart API to generate QR
-    imgEl.src = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl='+encoded
-  }
+  function setQR(imgEl, url){ if(!imgEl) return; imgEl.src = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl='+encodeURIComponent(url) }
 
-  // read room param
-  var params = new URLSearchParams(location.search)
-  var room = params.get('room')
-  var isHost = location.pathname.endsWith('host.html')
-  var isComposer = location.pathname.endsWith('composer.html')
-  var isHome = location.pathname.endsWith('index.html') || location.pathname.endsWith('/')
-  var isPlay = location.pathname.endsWith('play.html')
+  // Home artboard
+  var hotStart = qs('hot-start-hosting')
+  var hotJoinQR = qs('hot-join-qr')
+  var hotFill = qs('hot-fill-card')
+  var hotGuess = qs('hot-guess-card')
 
-  if(isHome){
-    var start = qs('start-hosting')
-    var joinBtn = qs('join-btn')
-    var joinInput = qs('join-code')
-    var qr = qs('qr-img')
-
-    var currentRoom = localStorage.getItem('lastRoom') || makeCode()
-    setQR(qr, location.origin + '/play.html?room=' + currentRoom)
-
-    start.addEventListener('click', function(){
+  if(hotStart){
+    hotStart.addEventListener('click', function(){
       var code = makeCode()
       localStorage.setItem('lastRoom', code)
-      // create minimal room state locally (Supabase hook would be here)
-      localStorage.setItem('room:' + code, JSON.stringify({players:[],songs:[]}))
-      location.href = 'host.html?room=' + code
-    })
-
-    joinBtn.addEventListener('click', function(){
-      var code = joinInput.value.trim().toUpperCase()
-      if(!code) return alert('Enter a room code')
-      // navigate to player page
-      location.href = 'play.html?room=' + code
+      localStorage.setItem('room:'+code, JSON.stringify({players:[],songs:[]}))
+      location.href = 'host.html?room='+code
     })
   }
 
-  if(isComposer){
-    var list = qs('created-list')
-    var qc = qs('quick-create')
-    qc.addEventListener('click', function(){
+  if(hotJoinQR){
+    hotJoinQR.addEventListener('click', function(){
+      // no visible input on artboard — use a prompt to enter the room code
+      var code = prompt('Enter room code to join').trim().toUpperCase()
+      if(code) location.href = 'play.html?room='+code
+    })
+  }
+
+  if(hotFill){ hotFill.addEventListener('click', function(){ location.href = 'composer.html?mode=fill' }) }
+  if(hotGuess){ hotGuess.addEventListener('click', function(){ location.href = 'composer.html?mode=guess' }) }
+
+  // Composer artboard wiring
+  var hotTabFill = qs('hot-tab-fill')
+  var hotTabGuess = qs('hot-tab-guess')
+  var inputSource = qs('input-song-source')
+  var selGenre = qs('select-genre')
+  var selBlanks = qs('select-blanks')
+  var hotAutoCreate = qs('hot-auto-create')
+  var hotSaveRound = qs('hot-save-round')
+
+  if(hotTabFill) hotTabFill.addEventListener('click', function(){ location.search = '?mode=fill' })
+  if(hotTabGuess) hotTabGuess.addEventListener('click', function(){ location.search = '?mode=guess' })
+
+  if(hotAutoCreate){
+    hotAutoCreate.addEventListener('click', function(){
+      // create a quick round and store locally
       var song = musicLibrary.quickCreate()
-      // save to local library for demo
-      var lib = JSON.parse(localStorage.getItem('library')||'[]')
-      lib.push(song)
-      localStorage.setItem('library', JSON.stringify(lib))
-      renderList()
+      song.mode = (new URLSearchParams(location.search).get('mode'))||'fill'
+      song.genre = selGenre ? selGenre.value : 'pop'
+      song.source = inputSource ? inputSource.value : ''
+      var rounds = JSON.parse(localStorage.getItem('rounds')||'[]')
+      rounds.push(song)
+      localStorage.setItem('rounds', JSON.stringify(rounds))
+      alert('Round created')
     })
-    function renderList(){
-      var lib = JSON.parse(localStorage.getItem('library')||'[]')
-      list.innerHTML = lib.map((s,i)=>`<div class="player-card">${i+1}. ${s.title} — <small>${s.artist}</small></div>`).join('')
-    }
-    renderList()
   }
 
-  if(isHost){
-    var code = params.get('room') || localStorage.getItem('lastRoom') || makeCode()
-    qs('room-code').textContent = code
-    qs('lobby-qr').src = ''
-    setQR(qs('lobby-qr'), location.origin + '/play.html?room=' + code)
-
-    qs('copy-code').addEventListener('click', function(){
-      navigator.clipboard.writeText(code).then(()=>alert('Copied'))
+  if(hotSaveRound){
+    hotSaveRound.addEventListener('click', function(){
+      var song = {
+        id: 'r'+Date.now(),
+        title: inputSource && inputSource.value ? inputSource.value : 'New Round',
+        artist: 'Composer',
+        mode: new URLSearchParams(location.search).get('mode')||'fill',
+        genre: selGenre?selGenre.value:'pop'
+      }
+      var rounds = JSON.parse(localStorage.getItem('rounds')||'[]')
+      rounds.push(song)
+      localStorage.setItem('rounds', JSON.stringify(rounds))
+      alert('Saved')
     })
-
-    qs('start-game').addEventListener('click', function(){
-      // mark game started in localStorage state
-      var state = JSON.parse(localStorage.getItem('room:' + code) || '{}')
-      state.started = true
-      localStorage.setItem('room:' + code, JSON.stringify(state))
-      // show host player (YouTube) and navigate to game view
-      startHostGameUI(code)
-    })
-
-    function startHostGameUI(code){
-      // show host player container
-      var player = qs('host-player')
-      player.classList.remove('hidden')
-      // pick a sample youtube id from musicLibrary
-      var lib = JSON.parse(localStorage.getItem('library')||'[]')
-      var pick = (lib[0] && lib[0].youtubeId) || musicLibrary.sampleYouTubeId()
-      qs('yt-iframe').src = 'https://www.youtube.com/embed/' + pick + '?rel=0&autoplay=1&controls=1'
-      // swap background to host-game mockup for host
-      document.body.className = 'host-game-bg'
-      // (players will be on play.html and won't hear music)
-    }
-
-    // if arrived already with ?game=1 start immediately
-    if(params.get('game')) startHostGameUI(code)
   }
 
-  if(isPlay){
-    var code = params.get('room') || 'UNKNOWN'
-    qs('player-room').textContent = 'Room ' + code
-    // player should NOT hear music — we won't load YouTube iframe here
+  // Host lobby wiring
+  var hostImg = qs('host-img')
+  var roomCodeText = qs('room-code-text')
+  var hostQR = qs('host-qr')
+  var playersArea = qs('players-area')
+  var hotStartGame = qs('hot-start-game')
+  var hostYTContainer = qs('host-yt-container')
+  var hostYT = qs('host-yt')
 
-    qs('ready-btn').addEventListener('click', function(){
-      alert('Ready! Waiting for host...')
-      // In real app we'd notify Supabase realtime here
-    })
+  if(hostImg){
+    // if there is a room param show it
+    var params = new URLSearchParams(location.search)
+    var room = params.get('room')
+    if(room){
+      if(roomCodeText) roomCodeText.textContent = room
+      if(hostQR) setQR(hostQR, location.origin + '/play.html?room=' + room)
+      // render players if any
+      var state = JSON.parse(localStorage.getItem('room:'+room) || '{}')
+      if(state.players && state.players.length){
+        playersArea.innerHTML = state.players.map(function(p){ return '<div style="padding:6px 0">'+(p.name||'Player')+'</div>'}).join('')
+      } else {
+        playersArea.innerHTML = '<div style="opacity:0.8">No players yet</div>'
+      }
+    }
+
+    if(hotStartGame){
+      hotStartGame.addEventListener('click', function(){
+        // mark started and go to game artboard (swap image and show host player)
+        if(room) {
+          var state = JSON.parse(localStorage.getItem('room:'+room) || '{}')
+          state.started = true
+          localStorage.setItem('room:'+room, JSON.stringify(state))
+        }
+        // swap the artboard image to the host game mockup
+        hostImg.src = 'IMG_8338.jpeg'
+        // show the host youtube container inside the music player area
+        hostYTContainer.style.display = 'block'
+        var pick = (JSON.parse(localStorage.getItem('rounds')||'[]')[0]||{}).youtubeId || musicLibrary.sampleYouTubeId()
+        hostYT.src = 'https://www.youtube.com/embed/' + pick + '?rel=0&autoplay=1&controls=1'
+      })
+    }
+  }
+
+  // Player page wiring
+  var playerRoomText = qs('player-room-text')
+  var questionArea = qs('question-area')
+  var leaderboardArea = qs('leaderboard-area')
+  var phonePreview = qs('phone-preview')
+  var hotPause = qs('hot-pause')
+  var hotEndRound = qs('hot-end-round')
+
+  if(playerRoomText){
+    var params = new URLSearchParams(location.search)
+    var room = params.get('room') || '---'
+    playerRoomText.textContent = 'Room ' + room
+    // show a placeholder question and leaderboard from localStorage state if present
+    var rounds = JSON.parse(localStorage.getItem('rounds')||'[]')
+    questionArea.textContent = rounds[0] ? (rounds[0].title + ' — ' + (rounds[0].artist||'')) : 'Waiting for host to start the round...'
+    var players = (JSON.parse(localStorage.getItem('room:'+room) || '{}').players) || []
+    leaderboardArea.innerHTML = players.length ? players.map(function(p,i){return '<div style="padding:6px 8px">'+(i+1)+'. '+(p.name||'Player')+'</div>'}).join('') : '<div style="opacity:0.8">No scores yet</div>'
+    phonePreview.textContent = 'Your phone preview'
+
+    if(hotPause) hotPause.addEventListener('click', function(){ alert('Pause pressed (host only)') })
+    if(hotEndRound) hotEndRound.addEventListener('click', function(){ alert('End Round pressed (host only)') })
   }
 
 })();

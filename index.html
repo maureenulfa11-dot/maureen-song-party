@@ -6,22 +6,25 @@
   <title>Song Party — Home</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="home-bg">
-  <div class="overlay">
-    <div class="top-left">
-      <button id="start-hosting" class="ghost-btn">Start Hosting</button>
-    </div>
-    <div class="center-join">
-      <input id="join-code" placeholder="Enter room code" />
-      <button id="join-btn">Join</button>
-    </div>
-    <div class="qr-area">
-      <img id="qr-img" alt="room qr" />
-      <div class="qr-caption">Scan to join</div>
-    </div>
-  </div>
+<body>
+  <main class="artboard" id="home-artboard">
+    <img src="IMG_8341.jpeg" alt="Home mockup artboard" id="home-img">
 
-  <script src="musicLibrary.js"></script>
+    <!-- Invisible hotspots positioned with percentages. Adjust percentages to align with the mockup. -->
+    <!-- Start Hosting hotspot (covers the "Start Hosting" area on the mockup) -->
+    <button class="hotspot" id="hot-start-hosting" style="top:40.5%;left:8.5%;width:24%;height:8%" aria-label="Start Hosting"></button>
+
+    <!-- Join via QR hotspot (click to open prompt to enter room or scan QR) -->
+    <button class="hotspot" id="hot-join-qr" style="top:56%;left:60%;width:30%;height:22%" aria-label="Join with QR"></button>
+
+    <!-- Fill in the Blank card hotspot -->
+    <button class="hotspot" id="hot-fill-card" style="top:70%;left:10%;width:33%;height:18%" aria-label="Fill in the Blank"></button>
+
+    <!-- Guess the Song card hotspot -->
+    <button class="hotspot" id="hot-guess-card" style="top:70%;left:48%;width:33%;height:18%" aria-label="Guess the Song"></button>
+
+  </main>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -3,22 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Song Party — Play</title>
+  <title>Song Party — Player</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="host-game-bg">
-  <div class="overlay">
-    <div class="player-panel">
-      <h2 id="player-room">Room</h2>
-      <div id="player-info">Waiting for host...</div>
-      <div class="player-actions">
-        <button id="ready-btn" class="primary-btn">Ready</button>
-      </div>
-      <div class="qr-caption small">Show this to host</div>
-    </div>
-  </div>
+<body>
+  <main class="artboard" id="play-artboard">
+    <img src="IMG_8338.jpeg" alt="Host game artboard" id="play-img">
 
-  <script src="musicLibrary.js"></script>
+    <!-- Player room text placed on top of the top bar area -->
+    <div id="player-room-text" class="overlay-text" style="top:6%;left:8%;width:40%;height:6%"></div>
+
+    <!-- Question area overlay (parchment) -->
+    <div id="question-area" class="overlay-text" style="top:28%;left:20%;width:56%;height:24%"></div>
+
+    <!-- Leaderboard area -->
+    <div id="leaderboard-area" class="overlay-text list" style="top:12%;left:76%;width:20%;height:58%"></div>
+
+    <!-- Phone preview area (player phone) -->
+    <div id="phone-preview" class="overlay-text" style="top:68%;left:12%;width:28%;height:28%"></div>
+
+    <!-- Invisible hotspots for Pause and End Round on the mockup controls -->
+    <button class="hotspot" id="hot-pause" style="top:8%;left:46%;width:10%;height:6%" aria-label="Pause"></button>
+    <button class="hotspot" id="hot-end-round" style="top:8%;left:58%;width:10%;height:6%" aria-label="End Round"></button>
+
+  </main>
+
   <script src="app.js"></script>
 </body>
 </html>

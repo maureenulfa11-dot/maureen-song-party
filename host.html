@@ -3,29 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Song Party — Host Lobby</title>
+  <title>Song Party — Host Lobby / Game</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="host-lobby-bg">
-  <div class="overlay">
-    <div class="lobby-panel">
-      <h1 id="room-code">ROOM</h1>
-      <div class="lobby-actions">
-        <button id="copy-code" class="ghost-btn">Copy</button>
-        <button id="start-game" class="primary-btn">Start Game</button>
-      </div>
-      <div class="qr-area small">
-        <img id="lobby-qr" alt="room qr" />
-        <div class="qr-caption">Scan to join</div>
-      </div>
-      <div id="players-list"></div>
-    </div>
-  </div>
+<body>
+  <main class="artboard" id="host-artboard">
+    <!-- We will swap the src between lobby and game mockups depending on state -->
+    <img src="IMG_8339.jpeg" alt="Host lobby artboard" id="host-img">
 
-  <!-- Host-only YouTube player. Only shown when host is in game mode -->
-  <div id="host-player" class="host-player hidden">
-    <iframe id="yt-iframe" width="560" height="315" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-  </div>
+    <!-- Room code text placed exactly over the mockup's code area -->
+    <div id="room-code-text" class="overlay-text" style="top:22%;left:58%;width:28%;height:10%">------</div>
+
+    <!-- QR image positioned over the QR area in the mockup -->
+    <img id="host-qr" class="qr-overlay" src="" alt="room qr" style="top:34%;left:63%;width:20%;height:22%">
+
+    <!-- Player list area (text will flow inside this box) -->
+    <div id="players-area" class="overlay-text list" style="top:48%;left:10%;width:36%;height:42%"></div>
+
+    <!-- Invisible Start Game hotspot over the Start Game button on the mockup -->
+    <button class="hotspot" id="hot-start-game" style="top:34%;left:10%;width:24%;height:12%" aria-label="Start Game"></button>
+
+    <!-- Host-only YouTube iframe container — it will be absolutely positioned inside the host music player area when game starts -->
+    <div id="host-yt-container" style="position:absolute;top:12%;left:36%;width:46%;height:30%;pointer-events:auto;display:none;">
+      <iframe id="host-yt" width="100%" height="100%" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+
+  </main>
 
   <script src="musicLibrary.js"></script>
   <script src="app.js"></script>
